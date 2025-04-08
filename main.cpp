@@ -1,15 +1,17 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
-const char HUMAN = 'X';
-const char COMPUTER = 'O';
+char HUMAN = 'X';
+char COMPUTER = 'O';
 const char EMPTY = ' ';
 
 class GameState {
 private:
-    vector<char> board; // 9 cells for Tic-Tac-Toe
+    vector<char> board; // Tic-Tac-Toe board 
 
 public:
     GameState() : board(9, EMPTY) {}
@@ -70,17 +72,17 @@ public:
 
 class TicTacToeTree {
 public:
-    int minimax(const GameState& state, bool isMaximizing) {
+    int minimax(const GameState& state, bool isMaximizing, int depth) {
         char winner = state.checkWinner();
         if (winner == COMPUTER) return 1;
         if (winner == HUMAN) return -1;
-        if (state.isFull()) return 0;
+        if (state.isFull() || depth == 0) return 0; // Depth limit reached aka GAME OVER
 
         if (isMaximizing) {
             int bestScore = numeric_limits<int>::min();
             for (int move : state.getAvailableMoves()) {
                 GameState newState = state.makeMove(move, COMPUTER);
-                int score = minimax(newState, false);
+                int score = minimax(newState, false, depth - 1); // Reduce depth
                 bestScore = max(bestScore, score);
             }
             return bestScore;
@@ -88,7 +90,7 @@ public:
             int bestScore = numeric_limits<int>::max();
             for (int move : state.getAvailableMoves()) {
                 GameState newState = state.makeMove(move, HUMAN);
-                int score = minimax(newState, true);
+                int score = minimax(newState, true, depth - 1); // Reduce depth
                 bestScore = min(bestScore, score);
             }
             return bestScore;
@@ -97,30 +99,45 @@ public:
 
     int findBestMove(const GameState& state) {
         int bestScore = numeric_limits<int>::min();
-        int bestMove = -1;
+        vector<int> bestMoves;
+
+        cout << "AI Decision Process:" << endl; // Track AI Decisions
 
         for (int move : state.getAvailableMoves()) {
             GameState newState = state.makeMove(move, COMPUTER);
-            int score = minimax(newState, false);
+            int score = minimax(newState, false, 6); // Depth limit of 6
+            cout << "Move " << move << " has score " << score << endl; // Debug output
             if (score > bestScore) {
                 bestScore = score;
-                bestMove = move;
+                bestMoves.clear();
+                bestMoves.push_back(move);
+            } else if (score == bestScore) {
+                bestMoves.push_back(move);
             }
         }
-        return bestMove;
+
+        srand(time(0)); // Add Randomness
+        return bestMoves[rand() % bestMoves.size()];
     }
 };
 
-void playGame() {
+void playGame() { // Playability and Switch Roles
+    cout << "Do you want to be 'X' (go first) or 'O'? ";
+    char userChoice;
+    cin >> userChoice;
+
+    HUMAN = (userChoice == 'X' || userChoice == 'x') ? 'X' : 'O';
+    COMPUTER = (HUMAN == 'X') ? 'O' : 'X';
+
     GameState state;
     TicTacToeTree ai;
-    char currentPlayer = HUMAN;
+    char currentPlayer = HUMAN == 'X' ? HUMAN : COMPUTER; // Determines if X is selcted by player, if not then CPU is X
 
     while (!state.isGameOver()) {
         state.printBoard();
         if (currentPlayer == HUMAN) {
             int move;
-            cout << "Enter your move (0-8): ";
+            cout << "Enter your move (0-8): "; // First Row is 0 - 1 - 2
             cin >> move;
             if (move >= 0 && move < 9 && state.getBoard()[move] == EMPTY) {
                 state = state.makeMove(move, HUMAN);
@@ -131,14 +148,14 @@ void playGame() {
         } else {
             int move = ai.findBestMove(state);
             state = state.makeMove(move, COMPUTER);
-            cout << "Computer plays at position " << move << endl;
+            cout << "CPU plays at position " << move << endl;
             currentPlayer = HUMAN;
         }
     }
 
     state.printBoard();
     char winner = state.checkWinner();
-    if (winner == COMPUTER) cout << "Computer wins!\n";
+    if (winner == COMPUTER) cout << "CPU wins!\n";
     else if (winner == HUMAN) cout << "You win!\n";
     else cout << "It's a draw!\n";
 }
