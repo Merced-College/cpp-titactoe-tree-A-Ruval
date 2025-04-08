@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include <cstdlib>
-#include <ctime>
+#include <cstdlib> // For srand
+#include <ctime> // Also for the srand
 using namespace std;
 
 char HUMAN = 'X';
@@ -35,14 +35,14 @@ public:
         return checkWinner() != EMPTY || isFull();
     }
 
-    char checkWinner() const {
+    char checkWinner() const { // All possible game winning patterns (Vertical, Horizontal, Diagonal)
         const int winPatterns[8][3] = {
             {0,1,2}, {3,4,5}, {6,7,8},
             {0,3,6}, {1,4,7}, {2,5,8},
             {0,4,8}, {2,4,6}
         };
 
-        for (auto& pattern : winPatterns) {
+        for (auto& pattern : winPatterns) { //Check for patterns 
             if (board[pattern[0]] != EMPTY &&
                 board[pattern[0]] == board[pattern[1]] &&
                 board[pattern[1]] == board[pattern[2]]) {
@@ -52,7 +52,7 @@ public:
         return EMPTY;
     }
 
-    vector<int> getAvailableMoves() const {
+    vector<int> getAvailableMoves() const { //All possible moves, must be less than 9 as we start with 0.
         vector<int> moves;
         for (int i = 0; i < 9; ++i)
             if (board[i] == EMPTY) moves.push_back(i);
@@ -126,8 +126,8 @@ void playGame() { // Playability and Switch Roles
     char userChoice;
     cin >> userChoice;
 
-    HUMAN = (userChoice == 'X' || userChoice == 'x') ? 'X' : 'O';
-    COMPUTER = (HUMAN == 'X') ? 'O' : 'X';
+    HUMAN = (userChoice == 'X' || userChoice == 'x') ? 'X' : 'O'; // Reads Users Choice
+    COMPUTER = (HUMAN == 'X') ? 'O' : 'X'; // Assigns the leftover role to the CPU
 
     GameState state;
     TicTacToeTree ai;
@@ -143,17 +143,17 @@ void playGame() { // Playability and Switch Roles
                 state = state.makeMove(move, HUMAN);
                 currentPlayer = COMPUTER;
             } else {
-                cout << "Invalid move. Try again.\n";
+                cout << "Invalid move. Try again.\n"; // Pops up with incorrect grid space is entered, remember it's numberized starting from 0 
             }
         } else {
-            int move = ai.findBestMove(state);
+            int move = ai.findBestMove(state); // Output where the CPU chose to move
             state = state.makeMove(move, COMPUTER);
             cout << "CPU plays at position " << move << endl;
             currentPlayer = HUMAN;
         }
     }
 
-    state.printBoard();
+    state.printBoard(); // Game endings
     char winner = state.checkWinner();
     if (winner == COMPUTER) cout << "CPU wins!\n";
     else if (winner == HUMAN) cout << "You win!\n";
